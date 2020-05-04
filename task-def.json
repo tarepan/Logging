@@ -1,0 +1,19 @@
+{
+  "family": "",
+  "executionRoleArn": "arn:aws:iam::516292881072:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "main",
+      "image": "httpd:2.4",
+      "essential": true
+    },
+    {
+      "name": "sidecar",
+      "image": "fluent/fluent-bit:latest",
+      "essential": true
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}
