@@ -25,7 +25,10 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-create-group": "true"
+          "awslogs-create-group": "true",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-group": "logging",
+          "awslogs-stream-prefix": "loggingx"
         }
       }
     }
