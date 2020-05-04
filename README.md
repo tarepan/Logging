@@ -1,6 +1,7 @@
 # Logging
 
-Logging Best Practices
+Implementation of logging Best Practices.  
+Basically "stdout" based logging.
 
 - dev module: F5 in code => editor's DebugConsole
 - dev app: `node ./src/app.js` => console
