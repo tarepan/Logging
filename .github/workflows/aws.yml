@@ -23,68 +23,66 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
+name: Deploy to Amazon ECS
 on:
-    release:
-      types: [created]
-  
-  name: Deploy to Amazon ECS
-  
-  jobs:
-    deploy:
-      name: Deploy
-      runs-on: ubuntu-latest
-  
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-  
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ap-northeast-1
-  
-        - name: Login to Amazon ECR with Docker
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
-  
-        - name: Build, tag, and push image to Amazon ECR
-          id: build-image
-          env:
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            IMAGE_TAG: ${{ github.sha }}
-          run: |
-            # Build images and push them to ECR with dockerd
-            # main
-            docker build -t $ECR_REGISTRY/logging/main:$IMAGE_TAG -f main.Dockerfile .
-            docker push $ECR_REGISTRY/logging/main:$IMAGE_TAG
-            echo "::set-output name=image_adress_main::$ECR_REGISTRY/logging/main:$IMAGE_TAG"
-            # sidecar
-            docker build -t $ECR_REGISTRY/logging/sidecar:$IMAGE_TAG -f fluent.Dockerfile .
-            docker push $ECR_REGISTRY/logging/sidecar:$IMAGE_TAG
-            echo "::set-output name=image_adress_sidecar::$ECR_REGISTRY/logging/sidecar:$IMAGE_TAG"
+  release:
+    types: [created]
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
 
-        - name: Update ECS task-def by Filling in the new main image ID
-          id: task-def-main
-          uses: aws-actions/amazon-ecs-render-task-definition@v1
-          with:
-            task-definition: src/task-def.json
-            container-name: main
-            image: ${{ steps.build-image.outputs.image_adress_main }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-        - name: Update ECS task-def by Filling in the new sidecar image ID
-          id: task-def-sidecar
-          uses: aws-actions/amazon-ecs-render-task-definition@v1
-          with:
-            task-definition: ${{ steps.task-def-main.outputs.task-definition }}
-            container-name: sidecar
-            image: ${{ steps.build-image.outputs.image_adress_sidecar }}
-  
-        - name: Deploy an Amazon ECS task definition
-          uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-          with:
-            task-definition: ${{ steps.task-def-sidecar.outputs.task-definition }}
-            service: fargate-service
-            cluster: logging
-            wait-for-service-stability: true
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Login to Amazon ECR with Docker
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build images and push them to ECR with dockerd
+          # main
+          docker build -t $ECR_REGISTRY/logging/main:$IMAGE_TAG -f main.Dockerfile .
+          docker push $ECR_REGISTRY/logging/main:$IMAGE_TAG
+          echo "::set-output name=image_adress_main::$ECR_REGISTRY/logging/main:$IMAGE_TAG"
+          # sidecar
+          docker build -t $ECR_REGISTRY/logging/sidecar:$IMAGE_TAG -f fluent.Dockerfile .
+          docker push $ECR_REGISTRY/logging/sidecar:$IMAGE_TAG
+          echo "::set-output name=image_adress_sidecar::$ECR_REGISTRY/logging/sidecar:$IMAGE_TAG"
+
+      - name: Update ECS task-def by Filling in the new main image ID
+        id: task-def-main
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: src/task-def.json
+          container-name: main
+          image: ${{ steps.build-image.outputs.image_adress_main }}
+
+      - name: Update ECS task-def by Filling in the new sidecar image ID
+        id: task-def-sidecar
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def-main.outputs.task-definition }}
+          container-name: sidecar
+          image: ${{ steps.build-image.outputs.image_adress_sidecar }}
+
+      - name: Deploy an Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def-sidecar.outputs.task-definition }}
+          service: fargate-service
+          cluster: logging
+          wait-for-service-stability: true
