@@ -2,6 +2,7 @@
 
 Implementation of logging Best Practices.  
 Basically "stdout" based logging.
+About logging: [wikipedia](https://ja.wikipedia.org/wiki/%E3%82%B5%E3%83%BC%E3%83%90%E3%83%AD%E3%82%B0)
 
 - dev module: F5 in code => editor's DebugConsole
 - dev app: `node ./src/app.js` => console
