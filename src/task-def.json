@@ -19,7 +19,7 @@
         "type": "fluentbit",
         "options": {
           "config-file-type": "file",
-          "config-file-value": "/fluent-bit/etc/fluent-bit-extend.conf"
+          "config-file-value": "/fluent-bit/etc/extends.conf"
         }
       },
       "logConfiguration": {
